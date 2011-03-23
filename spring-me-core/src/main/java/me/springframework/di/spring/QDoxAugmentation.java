@@ -151,16 +151,20 @@ public class QDoxAugmentation implements Augmentation {
         if (isInitializingBean(cl)) {
             instance.setInitMethod("afterPropertiesSet");
         }
-        for (MutablePropertySetter setter : instance.getSetters()) {
+
+        for (Iterator<MutablePropertySetter> it = instance.getSetters().iterator(); it.hasNext();) {
+            MutablePropertySetter setter = it.next();
             BeanProperty property = cl.getBeanProperty(setter.getName(), true);
             if (property == null) {
                 logger.logNoSuchProperty(setter.getName(), cl.getName());
+                it.remove();
             } else {
                 setter.setType(property.getType().getValue());
                 setter.setPrimitive(property.getType().isPrimitive());
                 attribute(setter.getSource(), context);
             }
         }
+
         if (instance.getConstructorArguments() != null && instance.getConstructorArguments().size() > 0) {
             logger.logInformConstructorArguments(instance.getName());
             for (MutableConstructorArgument argument : instance.getConstructorArguments()) {
