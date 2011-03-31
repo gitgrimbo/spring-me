@@ -37,10 +37,14 @@
  */
 package me.springframework.di.spring;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import me.springframework.di.MapSource;
 import me.springframework.di.Source;
@@ -52,6 +56,7 @@ import me.springframework.di.base.MutableInstanceReference;
 import me.springframework.di.base.MutableListSource;
 import me.springframework.di.base.MutableMapSource;
 import me.springframework.di.base.MutablePropertySetter;
+import me.springframework.di.base.MutableStringValueSource;
 
 import com.agilejava.blammo.BlammoLoggerFactory;
 import com.agilejava.blammo.LoggingKitAdapter;
@@ -70,6 +75,18 @@ import com.thoughtworks.qdox.model.Type;
  * 
  */
 public class QDoxAugmentation implements Augmentation {
+
+    @SuppressWarnings("serial")
+    private static final Set<String> literalTypes = unmodifiableSet(new HashSet<String>() {{
+        add(Boolean.class.getName());
+        add(Byte.class.getName());
+        add(Short.class.getName());
+        add(Integer.class.getName());
+        add(Long.class.getName());
+        add(Double.class.getName());
+        add(Float.class.getName());
+        add(String.class.getName());
+    }});
 
     /**
      * The object providing access to the sources.
@@ -348,23 +365,36 @@ public class QDoxAugmentation implements Augmentation {
         return true;
     }
 
-    private boolean match(MutableConstructorArgument mutableConstructorArgument, JavaParameter javaParameter) {
-        String argType = mutableConstructorArgument.getType();
+    private boolean match(MutableConstructorArgument argument, JavaParameter parameter) {
+        String argType = argument.getType();
+        Type paramType = parameter.getType();
+
         if (argType == null) {
             logger.logConstructorArgumentTypeIsNull();
             return false;
-        }
-        if (javaParameter.getType().isResolved()) {
-            if (builder.getClassByName(argType).isA(javaParameter.getType().getJavaClass())) {
-                return true;
-            } else {
-                logger.logConstructorArgumentTypeMismatch(argType, javaParameter.getType());
-                return false;
-            }
-        } else {
+        } else if (!paramType.isResolved()) {
             logger.logUnresolvedConstructorArgumentType();
             return true;
         }
+
+        if (builder.getClassByName(argType).isA(paramType.getJavaClass())) {
+            return true;
+        } else if (matchLiteral(argument.getSource(), paramType)) {
+            return true;
+        } else {
+            logger.logConstructorArgumentTypeMismatch(argType, paramType);
+            return false;
+        }
+    }
+
+    static boolean matchLiteral(Source source, Type type) {
+        if (!(source instanceof MutableStringValueSource)) {
+            return false;
+        }
+        if (type.isPrimitive()) {
+            return true;
+        }
+        return literalTypes.contains(type.getJavaClass().getFullyQualifiedName());
     }
 
     /**
