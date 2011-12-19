@@ -53,4 +53,6 @@ public interface LiteralSource extends Source {
      */
     String getValue();
 
+    // GRIMBO
+    boolean isNull();
 }

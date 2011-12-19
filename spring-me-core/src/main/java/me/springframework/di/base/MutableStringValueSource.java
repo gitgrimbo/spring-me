@@ -84,4 +84,8 @@ public class MutableStringValueSource extends AbstractTyped implements LiteralSo
         return "the value of " + sink.toString();
     }
 
+    public boolean isNull() {
+        // GRIMBO
+        return null == value;
+    }
 }

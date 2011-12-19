@@ -93,7 +93,7 @@ public class <destination.classname> <implementations()>{
         try {
             <definitions.publicInstances:destroy();separator="\n">
         } catch (Exception e) {
-            throw new <beanFactoryType.beansExceptionName>(e.getMessage());
+            throw new <beanFactoryType.beansExceptionName>(e.getMessage(), e);
         }
     }
     
@@ -144,14 +144,14 @@ private final <if(instance.factoryBean)>java.lang.Object<else><instance.type><en
         }
         return <instance.name;format="fieldName">.getObject();
     } catch(Exception e) {
-        throw new <beanFactoryType.beansExceptionName>(e.getMessage());
+        throw new <beanFactoryType.beansExceptionName>(e.getMessage(), e);
     }
 <else>
     if (<instance.name;format="fieldName"> == null) {
         try {
             <createLazilyBody(instance=instance)>
         } catch(Exception e) {
-            throw new <beanFactoryType.beansExceptionName>(e.getMessage());
+            throw new <beanFactoryType.beansExceptionName>(e.getMessage(), e);
         }
     }
     return <instance.name;format="fieldName">;
@@ -162,7 +162,7 @@ private final <if(instance.factoryBean)>java.lang.Object<else><instance.type><en
         <createLazilyBody(instance=instance)>
         return <instance.name;format="fieldName"><if(instance.factoryBean)>.getObject()<endif>;
     } catch(Exception e) {
-        throw new <beanFactoryType.beansExceptionName>(e.getMessage());
+        throw new <beanFactoryType.beansExceptionName>(e.getMessage(), e);
     }
 <endif>    
 }
@@ -216,7 +216,7 @@ private final <if(instance.factoryBean)>java.lang.Object<else><instance.type><en
         <endif>
         return result<if(instance.factoryBean)>.getObject()<endif>;
     } catch(Exception e) {
-        throw new <beanFactoryType.beansExceptionName>(e.getMessage());
+        throw new <beanFactoryType.beansExceptionName>(e.getMessage(), e);
     }
 }
 >>
@@ -259,7 +259,13 @@ get<source.name;format="className">()
 
 
 sourceStringRepresentation(type,source) ::= <<
+<if (!source.null)>
 <(stringConversion.(type))(source=source)>
+<else>
+null
+<endif>
+ // sourceStringRepresentation { type=<type>, source=<source>, source.id=<source.id>, source.sourceType=<source.sourceType>, source.type=<source.type>, source.primitive=<source.primitive>, source.class=<source.class>, source.value=<source.value> }
+
 >>
 
 
@@ -273,6 +279,7 @@ create<source.id;format="className">()
 
 
 stringToString(source) ::= <<
+ // StringToString
 "<source.value;format="escapeJava">"
 >>
 
@@ -319,7 +326,8 @@ stringToBooleanPrimitive(source) ::= <<
 
 
 stringToDefault(source) ::= <<
-null
+// stringToDefault
+"<source.value;format="escapeJava">"
 >>
 
 
